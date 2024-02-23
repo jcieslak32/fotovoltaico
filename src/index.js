@@ -1,0 +1,11 @@
+const express = require("express")
+const cors = require("cors")
+require("dotenv").config()
+const router = require("./routes")
+
+express()
+    .use(express.json())
+    .use(cors({ credentials: true, origin: "http://localhost:3000" }))
+    .use(express.static("public"))
+    .use("/api/v1", router)
+    .listen(3001)
