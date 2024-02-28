@@ -17,6 +17,18 @@ const User = mongoose.model(
                 type: String,
                 required: true,
             },
+            stationId: {
+                type: Number,
+                required: true,
+            },
+            freePeriod: {
+                type: Date,
+                default: () => {
+                    const currentDate = new Date()
+                    currentDate.setDate(currentDate.getDate() + 30)
+                    return currentDate
+                },
+            },
         },
         { timestamps: true }
     )

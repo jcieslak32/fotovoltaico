@@ -6,6 +6,11 @@ const UserController = require("./app/controllers/UserController")
 
 router.post("/token", TokenController.token)
 router.post("/list-all", verifyToken, DashboardController.getAll)
+router.post(
+    "/get-by-station-id",
+    verifyToken,
+    DashboardController.getByStationId
+)
 
 router.get("/users", verifyToken, UserController.index)
 router.post("/users", verifyToken, UserController.create)

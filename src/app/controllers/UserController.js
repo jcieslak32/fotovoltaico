@@ -1,6 +1,5 @@
 const Users = require("../models/Users")
 const bcrypt = require("bcrypt")
-const convertDate = require("../helpers/convert-date")
 
 class UserController {
     async index(req, res) {
@@ -15,6 +14,7 @@ class UserController {
                         email: user.email,
                         created_at: user.createdAt,
                         updated_at: user.updatedAt,
+                        freePeriod: (user.freePeriod >= new Date() ? 'Período de teste' : 'Periodo esgotado')
                     }
                 })
             )
@@ -69,6 +69,8 @@ class UserController {
             return res.status(200).json({
                 name: user.name,
                 email: user.email,
+                stationId: user.stationId,
+                freePeriod,
             })
         } catch (error) {
             return res.status(500).json(error)
@@ -100,6 +102,7 @@ class UserController {
                 name: user.name,
                 email: user.email,
                 password: user.password,
+                stationId: user.stationId,
             })
 
             return res.status(200).json({
