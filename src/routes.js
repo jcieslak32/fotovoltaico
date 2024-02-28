@@ -17,5 +17,10 @@ router.post("/users", verifyToken, UserController.create)
 router.put("/users", verifyToken, UserController.read)
 router.patch("/users", verifyToken, UserController.update)
 router.delete("/users", verifyToken, UserController.delete)
+router.post(
+    "/generate-new-payment-date",
+    verifyToken,
+    UserController.generateNewPaymentDate
+)
 
 module.exports = router

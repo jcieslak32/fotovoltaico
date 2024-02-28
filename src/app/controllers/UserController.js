@@ -14,7 +14,12 @@ class UserController {
                         email: user.email,
                         created_at: user.createdAt,
                         updated_at: user.updatedAt,
-                        freePeriod: (user.freePeriod >= new Date() ? 'Período de teste' : 'Periodo esgotado')
+                        freePeriod: !user.nextPayment
+                            ? user.freePeriod >= new Date()
+                                ? "Período de teste"
+                                : "Periodo esgotado"
+                            : false,
+                        nextPayment: user.nextPayment ? user.nextPayment : null,
                     }
                 })
             )
@@ -70,7 +75,8 @@ class UserController {
                 name: user.name,
                 email: user.email,
                 stationId: user.stationId,
-                freePeriod,
+                freePeriod: user.freePeriod >= new Date(),
+                nextPayment: user.nextPayment,
             })
         } catch (error) {
             return res.status(500).json(error)
@@ -103,6 +109,7 @@ class UserController {
                 email: user.email,
                 password: user.password,
                 stationId: user.stationId,
+                nextPayment: user.nextPayment,
             })
 
             return res.status(200).json({
@@ -129,6 +136,25 @@ class UserController {
             return res
                 .status(200)
                 .json({ message: "Usuário apagado com sucesso!" })
+        } catch (error) {
+            return res.status(500).json(error)
+        }
+    }
+
+    async generateNewPaymentDate(req, res) {
+        const id = req.body.id
+
+        const newDate = new Date()
+        newDate.setDate(newDate.getDate() + 30)
+
+        try {
+            await Users.findByIdAndUpdate(id, {
+                nextPayment: newDate,
+            })
+
+            return res
+                .status(200)
+                .json({ message: "Gerada nova data de cobrança!" })
         } catch (error) {
             return res.status(500).json(error)
         }

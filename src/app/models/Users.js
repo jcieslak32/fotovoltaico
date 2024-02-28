@@ -29,6 +29,9 @@ const User = mongoose.model(
                     return currentDate
                 },
             },
+            nextPayment: {
+                type: Date,
+            },
         },
         { timestamps: true }
     )
