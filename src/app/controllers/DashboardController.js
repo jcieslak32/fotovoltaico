@@ -1,33 +1,75 @@
 const axios = require("axios")
-const CircularJSON = require("circular-json")
-const getToken = require("../helpers/get-token")
+const processJSON = require("../helpers/process-circular-json")
+const { getSolarmanToken } = require("../helpers/get-tokens")
+const convertDate = require("../helpers/convert-date")
 
 const url = process.env.BASE_URL
 
 class DashboardController {
     async getAll(req, res) {
         try {
-            const token = await getToken()
-            const data = {
-                page: 1,
-                size: 20,
-            }
-            const headers = {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-            }
+            const solarmanToken = await getSolarmanToken()
+            let response = []
 
-            const response = await axios.post(
-                `${url}/list?language=en`,
-                data,
-                headers
+            const solarman = await processJSON(
+                await axios.post(
+                    `${url}/list?language=en`,
+                    {
+                        page: 1,
+                        size: 20,
+                    },
+                    {
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${solarmanToken}`,
+                        },
+                    }
+                )
             )
 
-            return res
-                .status(200)
-                .json(JSON.parse(CircularJSON.stringify(response)))
+            response.push({
+                clientes: solarman.data.stationList.map(async (station) => {
+                    const metering = await processJSON(
+                        await axios.post(
+                            `${url}/metering?appId=302309264764900&language=en`,
+                            {
+                                stationId: station.id,
+                                totalProductionType: 1,
+                            },
+                            {
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    Authorization: `Bearer ${solarmanToken}`,
+                                },
+                            }
+                        )
+                    )
+
+                    console.log(metering)
+
+                    return {
+                        id: station.id,
+                        nome: station.name,
+                        latitude: station.locationLat,
+                        longitude: station.locationLng,
+                        endereco: station.locationAddress,
+                        tipo:
+                            station.type === "HOUSE_ROOF"
+                                ? "Telhado da Casa"
+                                : "Térreo",
+                        capacidade_instalada: station.installedCapacity,
+                        data_iniciada: convertDate(station.startOperatingTime),
+                        data_criacao: convertDate(station.createdDate),
+                        ultima_atualizacao: convertDate(station.lastUpdateTime),
+                        status: station.networkStatus,
+                        geracao_energia: station.generationPower,
+                        acumulada: metering,
+                    }
+                }),
+            })
+
+            return res.status(200).json(response)
         } catch (error) {
-            console.log(error)
             return res.status(500).json(error)
         }
     }

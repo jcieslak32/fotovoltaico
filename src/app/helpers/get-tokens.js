@@ -1,6 +1,6 @@
 const axios = require("axios")
 
-const getToken = async () => {
+const getSolarmanToken = async () => {
     try {
         const url =
             "https://globalapi.solarmanpv.com/account/v1.0/token?appId=302309264764900&language=en&orgId=28188"
@@ -19,4 +19,6 @@ const getToken = async () => {
     }
 }
 
-module.exports = getToken
+module.exports = {
+    getSolarmanToken,
+}
