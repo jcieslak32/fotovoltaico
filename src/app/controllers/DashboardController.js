@@ -27,24 +27,8 @@ class DashboardController {
                 )
             )
 
-            response.push({
-                clientes: solarman.data.stationList.map(async (station) => {
-                    // const metering = await processJSON(
-                    //     await axios.post(
-                    //         `${url}/metering?appId=302309264764900&language=en`,
-                    //         {
-                    //             stationId: station.id,
-                    //             totalProductionType: 1,
-                    //         },
-                    //         {
-                    //             headers: {
-                    //                 "Content-Type": "application/json",
-                    //                 Authorization: `Bearer ${solarmanToken}`,
-                    //             },
-                    //         }
-                    //     )
-                    // )
-
+            const clientesPromises = solarman.data.stationList.map(
+                async (station) => {
                     return {
                         id: station.id,
                         nome: station.name,
@@ -61,10 +45,13 @@ class DashboardController {
                         ultima_atualizacao: convertDate(station.lastUpdateTime),
                         status: station.networkStatus,
                         geracao_energia: station.generationPower,
-                        // acumulada: metering,
                     }
-                }),
-            })
+                }
+            )
+
+            const clientes = await Promise.all(clientesPromises)
+
+            response.push({ clientes })
 
             return res.status(200).json(response)
         } catch (error) {
@@ -114,9 +101,7 @@ class DashboardController {
                 status: response.networkStatus,
                 geracao_energia: response.generationPower,
             })
-        } catch (error) {
-            return res.status(500).json(error)
-        }
+        } catch (error) {}
     }
 }
 
