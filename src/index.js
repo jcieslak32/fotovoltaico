@@ -8,7 +8,7 @@ const schedule = require("node-schedule")
 const app = express()
 
 app.use(express.json())
-app.use(cors({ credentials: true, origin: "https://front-na66.onrender.com/" }))
+app.use(cors({ credentials: true, origin: "https://front-na66.onrender.com" }))
 app.use(express.static("public"))
 app.use("/api/v1", router)
 
