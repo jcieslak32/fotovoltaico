@@ -19,7 +19,6 @@ const User = mongoose.model(
             },
             stationId: {
                 type: Number,
-                required: true,
             },
             freePeriod: {
                 type: Date,
@@ -31,6 +30,11 @@ const User = mongoose.model(
             },
             nextPayment: {
                 type: Date,
+            },
+            role: {
+                type: String,
+                enum: ["admin", "client"],
+                required: true,
             },
         },
         { timestamps: true }

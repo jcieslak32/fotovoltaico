@@ -1,3 +1,4 @@
+const { convertDateUser } = require("../helpers/convert-date")
 const Users = require("../models/Users")
 const bcrypt = require("bcrypt")
 
@@ -14,12 +15,16 @@ class UserController {
                         email: user.email,
                         created_at: user.createdAt,
                         updated_at: user.updatedAt,
+                        stationId: user.stationId,
                         freePeriod: !user.nextPayment
                             ? user.freePeriod >= new Date()
                                 ? "Período de teste"
                                 : "Periodo esgotado"
                             : false,
-                        nextPayment: user.nextPayment ? user.nextPayment : null,
+                        nextPayment: user.nextPayment
+                            ? convertDateUser(user.nextPayment)
+                            : null,
+                        role: user.role,
                     }
                 })
             )
@@ -74,9 +79,11 @@ class UserController {
             return res.status(200).json({
                 name: user.name,
                 email: user.email,
+                password: user.password,
                 stationId: user.stationId,
                 freePeriod: user.freePeriod >= new Date(),
                 nextPayment: user.nextPayment,
+                role: user.role,
             })
         } catch (error) {
             return res.status(500).json(error)
@@ -86,43 +93,42 @@ class UserController {
     async update(req, res) {
         const user = req.body
 
-        if (user.confirmPassword !== user.password) {
-            return res.status(422).json({
-                message: "A confirmação da senha precisa ser igual a senha!",
-            })
-        }
-
         try {
-            if (await Users.findOne({ email: user.email })) {
-                return res.status(422).json({
-                    message: "Por favor, utilize outro e-mail",
-                })
+            const oldUser = await Users.findOne({ email: user.email })
+
+            if (oldUser) {
+                if (oldUser.email !== user.email) {
+                    return res.status(422).json({
+                        message: "Por favor, utilize outro e-mail",
+                    })
+                }
             }
 
-            user.password = await bcrypt.hash(
-                user.password,
-                await bcrypt.genSalt(12)
-            )
+            if (user.password) {
+                user.password = await bcrypt.hash(
+                    user.password,
+                    await bcrypt.genSalt(12)
+                )
+            }
 
             await Users.findByIdAndUpdate(user.id, {
                 name: user.name,
                 email: user.email,
-                password: user.password,
+                password: !user.password ? oldUser.password : user.password,
                 stationId: user.stationId,
-                nextPayment: user.nextPayment,
+                role: user.role,
             })
 
             return res.status(200).json({
                 message: "Usuário atualizado com sucesso!",
             })
         } catch (error) {
-            console.log(error)
             return res.status(500).json(error)
         }
     }
 
     async delete(req, res) {
-        const id = req.body.id
+        const id = req.params.id
 
         if (!id) {
             return res
@@ -157,6 +163,31 @@ class UserController {
                 .json({ message: "Gerada nova data de cobrança!" })
         } catch (error) {
             return res.status(500).json(error)
+        }
+    }
+
+    async login(req, res) {
+        const { email, password } = req.body
+
+        try {
+            const user = await Users.findOne({ email })
+
+            if (
+                (await bcrypt.compare(
+                    password,
+                    user !== undefined ? user.password : null
+                )) === false
+            ) {
+                return res.status(422).json({
+                    message: "Senha ou e-mail inválido(a)",
+                })
+            }
+
+            return res.status(200).json(user)
+        } catch (error) {
+            return res.status(422).json({
+                message: "Senha ou e-mail inválido(a)",
+            })
         }
     }
 }
