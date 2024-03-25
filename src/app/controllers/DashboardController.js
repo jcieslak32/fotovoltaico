@@ -7,6 +7,52 @@ const Stations = require("../models/Stations")
 const url = process.env.BASE_URL
 
 class DashboardController {
+    async listAll(req, res) {
+        const solarmanToken = await getSolarmanToken()
+
+        const solarman = await processJSON(
+            await axios.post(
+                `${url}/list?language=en`,
+                {
+                    page: 1,
+                    size: 200,
+                },
+                {
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${solarmanToken}`,
+                    },
+                }
+            )
+        )
+
+        const clientesPromises = solarman.data.stationList.map(
+            async (station) => {
+                return {
+                    id: station.id,
+                    nome: station.name,
+                    latitude: station.locationLat,
+                    longitude: station.locationLng,
+                    endereco: station.locationAddress,
+                    tipo:
+                        station.type === "HOUSE_ROOF"
+                            ? "Telhado da Casa"
+                            : "Térreo",
+                    capacidade_instalada: station.installedCapacity,
+                    data_iniciada: convertDate(station.startOperatingTime),
+                    data_criacao: convertDate(station.createdDate),
+                    ultima_atualizacao: convertDate(station.lastUpdateTime),
+                    status: station.networkStatus,
+                    geracao_energia: station.generationPower,
+                }
+            }
+        )
+
+        const clientes = await Promise.all(clientesPromises)
+
+        return res.status(200).json(clientes)
+    }
+
     async getAll(req, res) {
         try {
             const solarmanToken = await getSolarmanToken()
