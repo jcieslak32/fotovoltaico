@@ -3,6 +3,7 @@ const { verifyToken } = require("./app/helpers/own-token")
 const DashboardController = require("./app/controllers/DashboardController")
 const TokenController = require("./app/controllers/TokenController")
 const UserController = require("./app/controllers/UserController")
+const TicketController = require("./app/controllers/TicketController")
 
 router.post("/token", TokenController.token)
 router.get("/list-all", verifyToken, DashboardController.getAll)
@@ -34,6 +35,18 @@ router.post(
     "/generate-new-payment-date",
     verifyToken,
     UserController.generateNewPaymentDate
+)
+
+router.get("/tickets", verifyToken, TicketController.index)
+router.post("/tickets/:id", verifyToken, TicketController.create)
+router.put("/tickets/:id", verifyToken, TicketController.read)
+router.patch("/tickets/:id", verifyToken, TicketController.update)
+router.patch("/tickets/answer/:id", verifyToken, TicketController.answer)
+router.delete("/tickets/:id", verifyToken, TicketController.delete)
+router.get(
+    "/tickets/get-all-from-user/:id",
+    verifyToken,
+    TicketController.getAllFromUser
 )
 
 module.exports = router
