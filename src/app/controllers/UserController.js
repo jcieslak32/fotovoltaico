@@ -15,7 +15,7 @@ class UserController {
                         email: user.email,
                         created_at: user.createdAt,
                         updated_at: user.updatedAt,
-                        stationId: user.stationId,
+                        stations: user.stations,
                         freePeriod: !user.nextPayment
                             ? user.freePeriod >= new Date()
                                 ? "Período de teste"
@@ -80,7 +80,7 @@ class UserController {
                 name: user.name,
                 email: user.email,
                 password: user.password,
-                stationId: user.stationId,
+                stations: user.stations,
                 freePeriod: user.freePeriod >= new Date(),
                 nextPayment: user.nextPayment,
                 role: user.role,
@@ -115,7 +115,7 @@ class UserController {
                 name: user.name,
                 email: user.email,
                 password: !user.password ? oldUser.password : user.password,
-                stationId: user.stationId,
+                stations: user.stations,
                 role: user.role,
             })
 

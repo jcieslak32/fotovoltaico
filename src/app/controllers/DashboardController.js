@@ -3,6 +3,7 @@ const processJSON = require("../helpers/process-circular-json")
 const { getSolarmanToken } = require("../helpers/get-tokens")
 const { convertDate } = require("../helpers/convert-date")
 const Stations = require("../models/Stations")
+const Users = require("../models/Users")
 
 const url = process.env.BASE_URL
 
@@ -60,6 +61,7 @@ class DashboardController {
             let generatedEnergy = 0
             let dailyGeneratedEnergy = 0
             let monthGeneratedEnergy = 0
+            let data
             const today = new Date()
             today.setHours(0, 0, 0, 0)
 
@@ -79,27 +81,37 @@ class DashboardController {
                 )
             )
 
-            const clientesPromises = solarman.data.stationList.map(
-                async (station) => {
-                    return {
-                        id: station.id,
-                        nome: station.name,
-                        latitude: station.locationLat,
-                        longitude: station.locationLng,
-                        endereco: station.locationAddress,
-                        tipo:
-                            station.type === "HOUSE_ROOF"
-                                ? "Telhado da Casa"
-                                : "Térreo",
-                        capacidade_instalada: station.installedCapacity,
-                        data_iniciada: convertDate(station.startOperatingTime),
-                        data_criacao: convertDate(station.createdDate),
-                        ultima_atualizacao: convertDate(station.lastUpdateTime),
-                        status: station.networkStatus,
-                        geracao_energia: station.generationPower,
-                    }
+            data = solarman.data.stationList
+
+            if (req.params.id) {
+                const user = await Users.findById(req.params.id)
+
+                if (user.role === "client") {
+                    data = data.filter((station) => {
+                        return user.stations.includes(station.id.toString())
+                    })
                 }
-            )
+            }
+
+            const clientesPromises = data.map(async (station) => {
+                return {
+                    id: station.id,
+                    nome: station.name,
+                    latitude: station.locationLat,
+                    longitude: station.locationLng,
+                    endereco: station.locationAddress,
+                    tipo:
+                        station.type === "HOUSE_ROOF"
+                            ? "Telhado da Casa"
+                            : "Térreo",
+                    capacidade_instalada: station.installedCapacity,
+                    data_iniciada: convertDate(station.startOperatingTime),
+                    data_criacao: convertDate(station.createdDate),
+                    ultima_atualizacao: convertDate(station.lastUpdateTime),
+                    status: station.networkStatus,
+                    geracao_energia: station.generationPower,
+                }
+            })
 
             const clientes = await Promise.all(clientesPromises)
 

@@ -17,8 +17,8 @@ const User = mongoose.model(
                 type: String,
                 required: true,
             },
-            stationId: {
-                type: Number,
+            stations: {
+                type: Object,
             },
             freePeriod: {
                 type: Date,
