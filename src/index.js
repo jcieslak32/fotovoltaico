@@ -17,6 +17,10 @@ schedule.scheduleJob("*/59 * * * *", async () => {
         await axios.get(
             `${process.env.API_BASE_URL}/set-station-generation-to-db`
         )
+        await axios.delete(
+            `${process.env.API_BASE_URL}/delete-all-alerts-on-start-of-day`
+        )
+        await axios.get(`${process.env.API_BASE_URL}/set-alerts-to-db`)
     } catch (error) {
         console.error("Error while calling the endpoint:", error.message)
     }

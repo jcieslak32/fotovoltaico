@@ -4,6 +4,7 @@ const DashboardController = require("./app/controllers/DashboardController")
 const TokenController = require("./app/controllers/TokenController")
 const UserController = require("./app/controllers/UserController")
 const TicketController = require("./app/controllers/TicketController")
+const AlertController = require("./app/controllers/AlertController")
 
 router.post("/token", TokenController.token)
 router.get("/list-all/:id?", verifyToken, DashboardController.getAll)
@@ -22,6 +23,14 @@ router.post(
 router.get(
     "/set-station-generation-to-db",
     DashboardController.setStationsGenerationToDb.bind(DashboardController)
+)
+router.delete(
+    "/delete-all-alerts-on-start-of-day",
+    DashboardController.deleteAllAlertsOnStartOfDay.bind(DashboardController)
+)
+router.get(
+    "/set-alerts-to-db",
+    DashboardController.setAlertsToDb.bind(DashboardController)
 )
 
 router.post("/login", verifyToken, UserController.login)
@@ -48,5 +57,7 @@ router.get(
     verifyToken,
     TicketController.getAllFromUser
 )
+
+router.get("/alerts/:id?", verifyToken, AlertController.getAll)
 
 module.exports = router

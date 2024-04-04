@@ -4,6 +4,7 @@ const { getSolarmanToken } = require("../helpers/get-tokens")
 const { convertDate } = require("../helpers/convert-date")
 const Stations = require("../models/Stations")
 const Users = require("../models/Users")
+const Alerts = require("../models/Alerts")
 
 const url = process.env.BASE_URL
 
@@ -416,6 +417,128 @@ class DashboardController {
             return res
                 .status(200)
                 .json({ message: "Dados atualizados com sucesso!" })
+        } catch (error) {
+            return res.status(500).json(error)
+        }
+    }
+
+    async setAlertsToDb(req, res) {
+        const currentDate = new Date()
+        const currentTimestamp = currentDate.getTime()
+        let alerts = []
+
+        try {
+            const solarmanToken = await getSolarmanToken()
+
+            const solarman = await processJSON(
+                await axios.post(
+                    `${url}/list?language=en`,
+                    {
+                        page: 1,
+                        size: 200,
+                    },
+                    {
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${solarmanToken}`,
+                        },
+                    }
+                )
+            )
+
+            alerts = await Promise.all(
+                (
+                    await solarman.data.stationList
+                ).map(async (station) => {
+                    const devicesResponse = await axios.post(
+                        `${url}/device`,
+                        { stationId: station.id },
+                        {
+                            headers: {
+                                "Content-Type": "application/json",
+                                Authorization: `Bearer ${solarmanToken}`,
+                            },
+                        }
+                    )
+
+                    const devices = devicesResponse.data.deviceListItems.filter(
+                        (device) => device.deviceType === "INVERTER"
+                    )
+
+                    const deviceAlerts = await Promise.all(
+                        devices.map(async (device) => {
+                            const alertResponse = await axios.post(
+                                `https://globalapi.solarmanpv.com/device/v1.0/alertList`,
+                                {
+                                    endTimestamp: currentTimestamp
+                                        .toString()
+                                        .substring(0, 10),
+                                    startTimestamp: new Date(currentTimestamp)
+                                        .setMonth(
+                                            new Date(
+                                                currentTimestamp
+                                            ).getMonth() - 1
+                                        )
+                                        .toString()
+                                        .substring(0, 10),
+                                    deviceSn: device.deviceSn,
+                                },
+                                {
+                                    headers: {
+                                        "Content-Type": "application/json",
+                                        Authorization: `Bearer ${solarmanToken}`,
+                                    },
+                                }
+                            )
+
+                            return alertResponse.data.alertList
+                                ? alertResponse.data.alertList.map((alert) => ({
+                                      stationId: station.id,
+                                      deviceSn: device.deviceSn,
+                                      ...alert,
+                                  }))
+                                : []
+                        })
+                    )
+
+                    return deviceAlerts.flat()
+                })
+            )
+
+            alerts = await Promise.all(alerts)
+
+            alerts = alerts.filter((array) => array.length > 0)
+
+            alerts.map(async (alertList) =>
+                alertList.map(async (alert) => {
+                    const station = solarman.data.stationList.find(
+                        (station) => station.id === alert.stationId
+                    )
+
+                    await Alerts.create({
+                        stationId: alert.stationId,
+                        stationName: station.name,
+                        message: alert.alertName,
+                        date: new Date(alert.alertTime * 1000),
+                    })
+                })
+            )
+
+            return res
+                .status(200)
+                .json({ message: "Alertas atualizados com sucesso!" })
+        } catch (error) {
+            return res.status(500).json(error)
+        }
+    }
+
+    async deleteAllAlertsOnStartOfDay(req, res) {
+        try {
+            await Alerts.deleteMany({})
+
+            return res
+                .status(200)
+                .json({ message: "Alertas àpagados com sucesso!" })
         } catch (error) {
             return res.status(500).json(error)
         }
