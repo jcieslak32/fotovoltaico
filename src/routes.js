@@ -36,6 +36,7 @@ router.get(
 router.post("/login", verifyToken, UserController.login)
 
 router.get("/users", verifyToken, UserController.index)
+router.post("/users/search", verifyToken, UserController.search)
 router.post("/users", verifyToken, UserController.create)
 router.put("/users", verifyToken, UserController.read)
 router.patch("/users", verifyToken, UserController.update)
@@ -58,6 +59,7 @@ router.get(
     TicketController.getAllFromUser
 )
 
+router.post("/alerts/search", verifyToken, AlertController.search)
 router.get("/alerts/:id?", verifyToken, AlertController.getAll)
 
 module.exports = router

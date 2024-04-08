@@ -4,9 +4,7 @@ const Users = require("../models/Users")
 class TicketController {
     async index(req, res) {
         try {
-            let tickets = await Tickets.find()
-                .sort("status")
-                .sort("-createdAt")
+            let tickets = await Tickets.find().sort("status").sort("-createdAt")
 
             tickets.map(async (ticket) => {
                 return await Users.findById({ _id: ticket.userId }).name
@@ -22,9 +20,9 @@ class TicketController {
         const id = req.params.id
 
         try {
-            const tickets = await Tickets.find({ "user.id": id }).sort(
-                "-createdAt"
-            )
+            const tickets = await Tickets.find({
+                $or: [{ "user.id": id }, { admin: { $exists: true } }],
+            }).sort("-createdAt")
 
             return res.status(200).json(tickets)
         } catch (error) {
@@ -47,9 +45,14 @@ class TicketController {
     async create(req, res) {
         const id = req.params.id
         const ticket = req.body
+        let user
 
         try {
-            const user = await Users.findById({ _id: id })
+            if (ticket.admin) {
+                user = await Users.findById({ _id: ticket.admin })
+            } else {
+                user = await Users.findById({ _id: id })
+            }
 
             await Tickets.create({
                 ...ticket,

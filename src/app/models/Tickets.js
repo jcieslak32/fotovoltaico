@@ -1,5 +1,5 @@
 const mongoose = require("../config/db")
-const { Schema } = mongoose
+const { Schema, ObjectId } = mongoose
 
 const Tickets = mongoose.model(
     "Tickets",
@@ -8,6 +8,10 @@ const Tickets = mongoose.model(
             user: {
                 type: Object,
                 required: true,
+            },
+            admin: {
+                type: String,
+                default: false,
             },
             type: {
                 type: String,

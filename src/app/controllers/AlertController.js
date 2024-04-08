@@ -16,6 +16,20 @@ class AlertController {
             return res.status(500).json(error)
         }
     }
+
+    async search(req, res) {
+        const search = req.body.search
+
+        try {
+            const alerts = await Alerts.find({ stationName: search })
+
+            console.log(alerts)
+
+            return res.status(200).json(alerts)
+        } catch (error) {
+            return res.status(500).json(error)
+        }
+    }
 }
 
 module.exports = new AlertController()

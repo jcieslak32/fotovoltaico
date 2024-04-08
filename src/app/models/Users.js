@@ -31,6 +31,9 @@ const User = mongoose.model(
             nextPayment: {
                 type: Date,
             },
+            price: {
+                type: Number,
+            },
             role: {
                 type: String,
                 enum: ["admin", "client"],

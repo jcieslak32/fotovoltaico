@@ -24,6 +24,7 @@ class UserController {
                         nextPayment: user.nextPayment
                             ? convertDateUser(user.nextPayment)
                             : null,
+                        price: user.price,
                         role: user.role,
                     }
                 })
@@ -116,6 +117,7 @@ class UserController {
                 email: user.email,
                 password: !user.password ? oldUser.password : user.password,
                 stations: user.stations,
+                price: user.price,
                 role: user.role,
             })
 
@@ -188,6 +190,18 @@ class UserController {
             return res.status(422).json({
                 message: "Senha ou e-mail inválido(a)",
             })
+        }
+    }
+
+    async search(req, res) {
+        const search = req.body.search
+
+        try {
+            const user = await Users.find({ email: search })
+
+            return res.status(200).json(user)
+        } catch (error) {
+            return res.status(500).json(error)
         }
     }
 }
